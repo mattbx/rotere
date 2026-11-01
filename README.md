@@ -6,6 +6,8 @@ a tombola sequencer for norns. drop notes into a spinning shape and they tumble 
 
 *rotere* is norwegian / danish for "to rotate, spin, revolve".
 
+![rotere on norns - early test screen](rotere1.png)
+
 **work in progress** - playable and stable on norns, but the screen is still a test layout (words now, icons later) and things will change.
 
 ## controls

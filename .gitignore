@@ -1,0 +1,5 @@
+reference/
+.DS_Store
+*.wav
+# dev notes stay private (also in the project docs)
+PLAN.md

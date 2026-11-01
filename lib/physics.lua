@@ -35,7 +35,7 @@ function P.new(opts)
   w.balls = {}
   w.walls = {}
   for i = 1, w.sides do w.walls[i] = {ax=0, ay=0, bx=0, by=0, nx=0, ny=0} end
-  w.on_hit = opts.on_hit or function(ball, impulse, kind) end
+  w.on_hit = opts.on_hit or function(ball, impulse, kind, wall) end -- wall: index of the wall hit (nil for ball-ball)
   w.on_escape = opts.on_escape or function(ball) end
   w:_update_walls()
   return w
@@ -62,11 +62,24 @@ function P:escape_radius()
   return self.radius / cos(pi / self.sides) + self.ball_r * 3
 end
 
--- recompute wall segment endpoints from angle / open
+-- recompute wall segment endpoints from angle / open.
+-- open 0..1 twists each wall 0..90 degrees about its midpoint (louvres).
+--
+-- twisted walls always line up into a smaller, rotated copy of the shape (a pinwheel),
+-- and balls get out through the gaps at its corners. for 5+ sides those gaps open wide
+-- on their own. a triangle's never get wider than ~95% of a ball (and close up again past
+-- 60 degrees, trapping everything), a square's close up near the full 90. so the inner end
+-- of each wall is pulled back just enough to keep a minimum gap that grows with the twist,
+-- up to a bit over one ball. anywhere the natural gap is already bigger, nothing changes.
+local GAP_SLOPE = 0.5 -- minimum gap per radian of twist (world units), below what 4+ sides open by themselves
 function P:_update_walls()
   local n, R = self.sides, self.radius
-  local half = R * math.tan(pi / n)            -- half side length of the polygon
+  local t = math.tan(pi / n)
+  local half = R * t                           -- half side length of the polygon
   local twist = self.open * (pi / 2)
+  local corner = R * (sin(twist) + cos(twist) * t) -- wall midpoint -> pinwheel corner, along the wall
+  local min_gap = math.min(GAP_SLOPE * twist, self.ball_r * 2.2)
+  local inner = math.min(half, corner - min_gap)
   for i = 1, n do
     local a = self.angle + (i - 1) * TAU / n   -- direction to wall midpoint
     local mx, my = R * cos(a), R * sin(a)
@@ -74,8 +87,8 @@ function P:_update_walls()
     local tx, ty = cos(ta), sin(ta)
     local wl = self.walls[i]
     wl.mx, wl.my = mx, my
-    wl.ax, wl.ay = mx - tx * half, my - ty * half
-    wl.bx, wl.by = mx + tx * half, my + ty * half
+    wl.ax, wl.ay = mx - tx * half, my - ty * half    -- end that swings outward
+    wl.bx, wl.by = mx + tx * inner, my + ty * inner  -- end that swings inward
   end
 end
 
@@ -155,8 +168,9 @@ function P:step(dt, crank_omega)
             local j = -(1 + e) * vn
             b.vx, b.vy = b.vx + j * nx, b.vy + j * ny
             if not b.contact[k] and j > thr and self.time - b.last_hit > self.retrigger then
-              self.on_hit(b, j, "wall")
-              b.flash, b.last_hit = 1, self.time
+              -- on_hit returns false when the note is skipped (probability): no flash then
+              if self.on_hit(b, j, "wall", k) ~= false then b.flash = 1 end
+              b.last_hit = self.time
             end
           end
           b.contact[k] = true
@@ -188,8 +202,14 @@ function P:step(dt, crank_omega)
             local key = -k -- negative keys = ball contacts, keeps wall keys clean
             if self.ball_hits and not a.contact[key] and j > thr then
               local t = self.time
-              if t - a.last_hit > self.retrigger then self.on_hit(a, j, "ball"); a.flash, a.last_hit = 1, t end
-              if t - b.last_hit > self.retrigger then self.on_hit(b, j, "ball"); b.flash, b.last_hit = 1, t end
+              if t - a.last_hit > self.retrigger then
+                if self.on_hit(a, j, "ball") ~= false then a.flash = 1 end
+                a.last_hit = t
+              end
+              if t - b.last_hit > self.retrigger then
+                if self.on_hit(b, j, "ball") ~= false then b.flash = 1 end
+                b.last_hit = t
+              end
             end
             a.contact[key] = true
           end

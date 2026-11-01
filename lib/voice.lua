@@ -14,6 +14,12 @@ local OUTPUTS = {"engine", "midi", "engine + midi"}
 local midi_out = nil
 local active = {} -- midi notes currently on: note -> {t = off time, ch = channel}
 
+-- octave ranges a hit can land in, around the base note (arp order = listed order)
+local OCTAVE_NAMES = {"off", "+1", "+2", "-1", "-2", "+/-1", "+/-2"}
+local OCTAVE_SETS = {
+  {0}, {0, 1}, {0, 1, 2}, {0, -1}, {0, -1, -2}, {-1, 0, 1}, {-2, -1, 0, 1, 2},
+}
+
 local function build_scale()
   scale_notes = musicutil.generate_scale(
     params:get("root") - 1, params:get("scale"), 10)
@@ -58,6 +64,14 @@ function Voice.add_params()
   params:add_option("scale", "scale", names, 1)
   params:set_action("scale", build_scale)
 
+  params:add_option("octaves", "octaves", OCTAVE_NAMES, 1)
+  params:add_option("octave_pick", "octave pick", {"arp", "random", "by wall"}, 1)
+  params:add_number("transpose", "transpose", -24, 24, 0, function(p)
+    local v = p:get()
+    return (v > 0 and "+" or "") .. v .. " st"
+  end)
+  params:add_control("probability", "probability", controlspec.new(0, 100, "lin", 1, 100, "%", 0.01))
+
   params:add_number("dyn_floor", "quietest hit", 1, 127, 20)
   params:add_control("pan_width", "pan width", controlspec.new(0, 1, "lin", 0.01, 0.7))
 
@@ -90,6 +104,30 @@ function Voice.random_note()
   return pool[math.random(#pool)]
 end
 
+-- roll for whether a hit sounds at all (probability param)
+function Voice.chance()
+  local p = params:get("probability")
+  return p >= 100 or math.random() * 100 < p
+end
+
+-- which octave a hit plays in.
+-- arp: each ball steps through the range on successive hits, then wraps.
+-- random: any octave in the range. by wall: each wall has its own octave, so the
+-- mapping turns with the shape (ball-on-ball hits fall back to random).
+function Voice.octave_for(ball, wall)
+  local set = OCTAVE_SETS[params:get("octaves")]
+  if #set == 1 then return 0 end
+  local pick = params:get("octave_pick")
+  if pick == 1 then
+    local i = (ball.oct_step or 0) % #set + 1
+    ball.oct_step = i
+    return set[i]
+  elseif pick == 3 and wall then
+    return set[(wall - 1) % #set + 1]
+  end
+  return set[math.random(#set)]
+end
+
 -- call once per physics tick before hits are played: resets the burst guard
 -- and sends any midi note-offs that are due
 function Voice.tick()
@@ -114,12 +152,15 @@ local function engine_has_pan()
   return has_pan
 end
 
--- note: midi note number, vel: 1-127, pos: -1 (left) .. 1 (right), where the hit happened
-function Voice.play(note, vel, pos)
+-- note: midi note number, vel: 1-127, pos: -1 (left) .. 1 (right), where the hit happened,
+-- octave: octave offset for this hit (from Voice.octave_for)
+function Voice.play(note, vel, pos, octave)
   if notes_this_tick >= MAX_NOTES_PER_TICK then return end
   notes_this_tick = notes_this_tick + 1
 
-  local n = Voice.quantise(note)
+  -- scale first, then octave and transpose shift the result (transpose moves the key too)
+  local n = Voice.quantise(note) + (octave or 0) * 12 + params:get("transpose")
+  n = util.clamp(n, 0, 127)
   local floor = params:get("dyn_floor")
   local v = floor + (vel - 1) * (127 - floor) / 126 -- lift soft hits so they're still audible
 

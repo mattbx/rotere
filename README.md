@@ -6,9 +6,9 @@ a tombola sequencer for norns. drop notes into a spinning shape and they tumble 
 
 *rotere* is norwegian / danish for "to rotate, spin, revolve".
 
-![rotere on norns - early test screen](rotere1.png)
+![rotere on norns](rotere1.png)
 
-**work in progress** - playable and stable on norns, but the screen is still a test layout (words now, icons later) and things will change.
+**work in progress** - playable and stable on norns, things will change.
 
 ## controls
 
@@ -18,19 +18,22 @@ a tombola sequencer for norns. drop notes into a spinning shape and they tumble 
 - K1 + E2 - sides (3 to 8)
 - K1 + E3 - open (twist the walls and let the balls fall out)
 - K2 - drop a ball (random note from the scale)
-- K1 + K2 - drop 8
 - K3 - empty it
 - or play a midi keyboard - each key drops that note in
 
-the bottom row of the screen is debug for now: ball count, physics and draw time in ms.
+the screen keeps it simple: spin top left, gravity (G) and mass (M) on the right. hold K1 and sides + open show up bottom left.
 
 ## params
 
 - **input** - midi in device and channel (omni by default)
 - **output** - engine, midi, or engine + midi. midi device, channel and note length
-- **notes** - root and scale (balls already in there retune when you change it), quietest hit, pan width
+- **notes** - root and scale (balls already in there retune when you change it), octaves, octave pick, transpose, probability, quietest hit, pan width
+  - **octaves** - off, +1, +2, -1, -2, +/-1, +/-2. extra octaves a hit can land in
+  - **octave pick** - arp (each ball climbs through the octaves hit by hit), random, or by wall (each wall has its own octave, so it turns with the shape)
+  - **transpose** - +/-24 semitones, after the scale, so it shifts the key too
+  - **probability** - chance each hit actually plays. skipped hits don't flash, and don't move the arp along
 - **polyperc** - amp, release, cutoff, pw, gain
-- **physics** - gravity, mass, ball-on-ball notes (off by default, it gets busy)
+- **physics** - gravity, mass, ball-on-ball notes (off by default, it gets busy), show cpu (ball count and timings bottom left)
 
 ## notes
 

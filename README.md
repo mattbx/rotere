@@ -1,14 +1,25 @@
 # rotere
 
-lob atoms into a spinning box.
+tombola sequencer for norns - drop notes into a spinning shape and they play when they hit the walls.
 
-a tombola sequencer for norns. drop notes into a spinning shape and they tumble around under gravity, playing whenever they hit a wall. the harder the hit, the louder the note. inspired by the tombola sequencer on the teenage engineering OP-1 and OP-1 field.
+lob atoms into a spinning box. the notes tumble around under gravity and play whenever they hit a wall, and the harder the hit, the louder the note. spin it either way, change the gravity, the bounce and the number of sides, or twist the walls open and let the notes fall out. it plays the built-in PolyPerc engine, a midi synth or both, and a midi keyboard can drop notes in. inspired by the tombola sequencer on the teenage engineering OP-1 and OP-1 field, with its own physics written from scratch.
 
 *rotere* is norwegian / danish for "to rotate, spin, revolve".
 
 ![rotere on norns](rotere1.png)
 
 **work in progress** - playable and stable on norns, things will change.
+
+## requirements
+
+- norns. per-note panning needs a recent norns update - on older ones polyperc is mono and panning is skipped
+- optional: a midi keyboard to drop notes in, a midi synth to play out to
+
+## install
+
+```
+;install https://github.com/mattbx/rotere
+```
 
 ## controls
 
@@ -38,15 +49,13 @@ the screen keeps it simple: spin top left, gravity (G) and mass (M) on the right
 ## notes
 
 - up to 24 balls. 6-8 is the sweet spot.
-- each note pans to where the ball hit. needs a recent norns update - on older ones polyperc is mono and panning is skipped.
+- each note pans to where the ball hit (see requirements for older norns).
 - gravity is relative to spin: the faster it spins, the more gravity it takes before the balls tumble instead of riding round the walls. riding the walls is fun too.
 - if your synth echoes midi back in on the same port (midi thru), rotere ignores its own notes so the tombola doesn't fill itself.
 
-## install
+## tests
 
-```
-;install https://github.com/mattbx/rotere
-```
+rotere has off-device tests and screen previews that run in plain lua 5.3 - see `test/README.md`. the `norns_offline.lua` harness in there works for other norns scripts too.
 
 ## credits
 

@@ -8,8 +8,11 @@ Input: blocks starting "FRAME<tab>name", then one screen call per line, tab sepa
 (level, rect, fill, move, line, stroke, text, text_right). Output: one sheet with every
 frame at 4x plus a label.
 
-Pixel-exact for rects and lines (aa off). Text uses a hand-made 3x5 font that is close to
-norns font 1 but not identical - judge text widths on the device.
+Rects are pixel-exact (aa off). Lines are drawn with Bresenham, which is close to but not
+the same as the Cairo stroker norns uses: measured 2026-11-23 against Weft's Cairo 1.16
+replay, rects matched 0 px and lines differed by 120-210 px per frame. Text uses a
+hand-made 3x5 font that is close to norns font 1 but not identical. For exact pixels use
+Weft's screens.py with test/screens.lua (see test/README.md).
 """
 import sys
 from PIL import Image, ImageDraw, ImageFont

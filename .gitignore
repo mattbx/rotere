@@ -3,3 +3,5 @@ reference/
 *.wav
 # dev notes stay private (also in the project docs)
 PLAN.md
+# preview renders from test/screens.lua, remade by Weft's screens.py
+/screens/

@@ -1,13 +1,21 @@
--- render a few rotere screens for review, from the real drawing code:
+-- quick screen previews without Weft, from the same scenes as test/screens.lua:
 --   lua5.3 test/render_screens.lua > /tmp/frames.txt
---   python3 test/screen_png.py /tmp/frames.txt screens.png
--- edit the scenes below to preview whatever state you're working on.
+--   mkdir -p screens
+--   python3 test/screen_png.py /tmp/frames.txt screens/quick.png
+-- rects are exact, lines and text are close but not exact (see screen_png.py).
+-- for exact pixels use Weft's screens.py (test/README.md). to preview another
+-- state, add a shot to test/screens.lua - both tools pick it up.
 
 local N = dofile("test/norns_offline.lua")
-math.randomseed(4)
-local sim = N.load{root = ".", script = "rotere.lua", engine_commands = {"pan"}}
+local cfg = dofile("test/screens.lua")
+math.randomseed(cfg.seed or 0)
+-- options first, then root and script, as Weft's screens.lua does
+local opts = {}
+for k, v in pairs(cfg.options or {}) do opts[k] = v end
+opts.root, opts.script = ".", cfg.script
+local sim = N.load(opts)
 
-local function frame(name)
+local function shot(name)
   io.write("FRAME\t", name, "\n")
   for _, op in ipairs(sim.draw()) do
     local parts = {}
@@ -16,19 +24,4 @@ local function frame(name)
   end
 end
 
-for _ = 1, 6 do sim.press(2) end
-sim.enc(1, 30); sim.run(3)
-frame("normal view, spin 3")
-
-sim.key(1, 1)
-frame("K1 held")
-
-sim.enc(2, -3)
-for _ = 1, 30 do sim.enc(3, 1); sim.run(0.03) end
-sim.run(1)
-frame("K1 held: triangle opening")
-sim.key(1, 0)
-
-sim.enc(1, -50); sim.run(1)
-params:set("show_cpu", 2)
-frame("spinning backwards, show cpu on")
+cfg.scenes(sim, shot)

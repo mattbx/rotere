@@ -2,7 +2,7 @@
 screen_png.py - turn recorded norns screen calls into PNGs (128x64, 16 grey levels).
 
     lua5.3 test/render_screens.lua > /tmp/frames.txt
-    python3 test/screen_png.py /tmp/frames.txt screens.png      (needs Pillow)
+    python3 test/screen_png.py /tmp/frames.txt screens/quick.png      (needs Pillow; mkdir -p screens first)
 
 Input: blocks starting "FRAME<tab>name", then one screen call per line, tab separated
 (level, rect, fill, move, line, stroke, text, text_right). Output: one sheet with every

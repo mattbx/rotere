@@ -9,7 +9,9 @@
 --
 -- The states are reached with the keys and encoders a player would use. Balls
 -- drop at random notes, so the seed is fixed, and time only moves when sim.run
--- says so: every run draws the same pixels on any machine.
+-- says so: every run draws the same pixels on the same platform. Not across
+-- platforms: Lua 5.3's math.random wraps the C library's random(), which macOS
+-- and Linux implement differently, so a Mac run can put the balls elsewhere.
 -- Add a shot here for whatever state you're working on.
 
 return {

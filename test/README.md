@@ -11,7 +11,9 @@ lua5.3 test/bench.lua           # physics speed + note counts (norns is roughly 
 
 `screens.lua` lists the screen states worth seeing (normal view, K1 held, the
 triangle opening, spinning backwards). it drives the real script with keys and
-encoders, so every run draws the same pixels. add a shot there for whatever
+encoders, so every run draws the same pixels on the same platform (lua 5.3's
+`math.random` follows the C library, so a native Mac run can put the balls
+somewhere other than the Linux docker run does). add a shot there for whatever
 you're working on.
 
 **exact**, with Weft's preview tool. this runs from a checkout of **Weft**
@@ -37,8 +39,9 @@ rects are exact, lines are a few pixels off in places and text uses a hand-made
 copy of the norns font.
 
 ```
+mkdir -p screens
 lua5.3 test/render_screens.lua > /tmp/frames.txt
-python3 test/screen_png.py /tmp/frames.txt screens.png
+python3 test/screen_png.py /tmp/frames.txt screens/quick.png
 ```
 
 ## the bits
